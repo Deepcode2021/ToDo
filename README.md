@@ -13,6 +13,6 @@
 * **HTML CSS JS**
 
 ## 🚀 Getting Started ()
-<a href="deepcode2021.github.io/ToDo/">LINK</a>
+<a href="deepcode2021.github.io/ToDo/">
 
 
