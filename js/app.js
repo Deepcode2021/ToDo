@@ -1080,6 +1080,293 @@ const DOC_SEED = {
 };
 
 // ============================================================
+// SEED DATA — Smart Lecture Scanner (Flutter + Dart, 12 topics)
+// ============================================================
+const SLS_PROJECT_ID = 'smart-lecture-scanner-v1';
+
+const SLS_SEED = {
+  project: {
+    id: SLS_PROJECT_ID,
+    name: 'Smart Lecture Scanner',
+    description: 'A hands-free, cross-platform mobile app for college students that auto-detects slide changes via OpenCV (SSIM), captures frames, runs on-device OCR, and compiles dual-layer searchable PDFs organized by course and date.',
+    language: 'Flutter / Dart',
+    status: 'active',
+    color: '#f97316',
+    created_at: Date.now() - 900000,
+  },
+
+  topics: [
+    {
+      id:'sls-t01', project_id:SLS_PROJECT_ID, order_index:1,
+      title:'Flutter & Dart Fundamentals',
+      description:'Master Dart language basics and Flutter widget tree before writing any scanner logic.',
+      priority:'high', tag:'Phase 0 — Foundation', completed:false,
+      notes:'Key Dart concepts: null safety, async/await, streams, isolates. Key Flutter: StatefulWidget vs StatelessWidget, BuildContext, setState, pubspec.yaml. Install Flutter SDK and run flutter doctor to verify setup. First milestone: build a camera preview screen.',
+      links:'Flutter Official Docs | https://docs.flutter.dev/\nDart Language Tour | https://dart.dev/language\nFlutter Cookbook | https://docs.flutter.dev/cookbook\nDart DartPad (online) | https://dartpad.dev/\nFlutter YouTube Channel | https://www.youtube.com/@flutterdev',
+    },
+    {
+      id:'sls-t02', project_id:SLS_PROJECT_ID, order_index:2,
+      title:'Development Environment Setup',
+      description:'Install Flutter SDK, Android Studio / Xcode, set up an emulator or physical device for testing.',
+      priority:'high', tag:'Phase 0 — Foundation', completed:false,
+      notes:'Steps: 1. Install Flutter SDK from flutter.dev/docs/get-started. 2. Install Android Studio + Android SDK. 3. Run: flutter doctor (fix all issues). 4. Enable USB Debugging on Android device OR use iOS Simulator on Mac. 5. Create first project: flutter create lecture_scanner. 6. Add camera permission to AndroidManifest.xml and Info.plist.',
+      links:'Flutter Installation | https://docs.flutter.dev/get-started/install\nAndroid Studio | https://developer.android.com/studio\nFlutter Doctor Guide | https://docs.flutter.dev/get-started/install/windows/mobile?tab=download\nCamera Plugin | https://pub.dev/packages/camera',
+    },
+    {
+      id:'sls-t03', project_id:SLS_PROJECT_ID, order_index:3,
+      title:'Camera Integration & Live Preview',
+      description:'Integrate the Flutter camera plugin to display a real-time camera preview and lock exposure/focus for projector environments.',
+      priority:'high', tag:'Phase A — Live Capture', completed:false,
+      notes:'Use the official camera package. Key tasks: initialize CameraController, render CameraPreview widget, handle permissions (camera_info_helper or permission_handler). Critical for projector: lock focus and auto-exposure via setFocusPoint() and setExposureMode(ExposureMode.locked). This prevents the camera hunting between the bright projector and the dark room.',
+      links:'camera package (pub.dev) | https://pub.dev/packages/camera\nFlutter Camera Cookbook | https://docs.flutter.dev/cookbook/plugins/picture-using-camera\npermission_handler | https://pub.dev/packages/permission_handler\nAndroid Camera2 API | https://developer.android.com/training/camera2',
+    },
+    {
+      id:'sls-t04', project_id:SLS_PROJECT_ID, order_index:4,
+      title:'Slide Change Detection with OpenCV (SSIM)',
+      description:'Implement the core frame-differencing loop using opencv_dart to compute SSIM and trigger captures only when a slide genuinely changes.',
+      priority:'high', tag:'Phase A — Live Capture', completed:false,
+      notes:'Use opencv_dart package. Workflow: 1. Capture a frame every N milliseconds using a timer. 2. Convert to grayscale. 3. Compute SSIM (Structural Similarity Index) between current and previous frame. 4. If SSIM < threshold (e.g., 0.85), a slide change is detected. 5. Save raw frame to temp buffer. Tune the threshold — too sensitive = false triggers from lighting changes; too lenient = misses fast slides. Run OpenCV in a Dart Isolate to avoid blocking the UI.',
+      links:'opencv_dart (pub.dev) | https://pub.dev/packages/opencv_dart\nOpenCV SSIM Python docs (concept) | https://docs.opencv.org/4.x/d1/dc5/tutorial_background_subtraction.html\nStructural Similarity Index (Wikipedia) | https://en.wikipedia.org/wiki/Structural_similarity_index_measure\nDart Isolates | https://dart.dev/language/isolates',
+    },
+    {
+      id:'sls-t05', project_id:SLS_PROJECT_ID, order_index:5,
+      title:'Perceptual Hashing for Deduplication',
+      description:'Prevent duplicate captures when the camera shakes or someone walks in front of the projector by comparing perceptual hashes of candidate frames.',
+      priority:'high', tag:'Phase A — Live Capture', completed:false,
+      notes:'Perceptual Hash (pHash) produces a compact fingerprint of an image. Two images with similar content have a low Hamming distance. Workflow: 1. Before saving a captured frame, compute its pHash. 2. Compare to the hash of the last saved frame. 3. If Hamming distance < 10 bits, discard as duplicate. OpenCV does not have a built-in pHash — implement DCT-based hash manually or use the image_hash community package.',
+      links:'opencv_dart | https://pub.dev/packages/opencv_dart\nPerceptual Hashing (Wikipedia) | https://en.wikipedia.org/wiki/Perceptual_hashing\nDCT-based pHash tutorial | http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html\nHamming Distance | https://en.wikipedia.org/wiki/Hamming_distance',
+    },
+    {
+      id:'sls-t06', project_id:SLS_PROJECT_ID, order_index:6,
+      title:'Raw Image Buffer Management',
+      description:'Design the in-class temporary buffer — a fast local store for raw captured frames that defers processing until after the lecture.',
+      priority:'high', tag:'Phase A — Live Capture', completed:false,
+      notes:'Do NOT process images during class — every CPU cycle is precious for the detection loop. Workflow: 1. Capture raw frame as XFile (from camera plugin). 2. Save immediately to app\'s temp directory using path_provider (getTemporaryDirectory()). 3. Keep an in-memory list of file paths with timestamps as the "session buffer". 4. On session end, persist the buffer list to SharedPreferences or sqflite for the deferred processing queue.',
+      links:'path_provider | https://pub.dev/packages/path_provider\nshared_preferences | https://pub.dev/packages/shared_preferences\nDart File I/O | https://dart.dev/libraries/dart-io\nsqflite | https://pub.dev/packages/sqflite',
+    },
+    {
+      id:'sls-t07', project_id:SLS_PROJECT_ID, order_index:7,
+      title:'Review Queue & Corner-Crop UI',
+      description:'Build the post-class review screen where users swipe through raw captures, approve auto-crops, or manually adjust the 4-point crop corners.',
+      priority:'high', tag:'Phase B — Deferred Processing', completed:false,
+      notes:'The review queue is where the user inspects captured frames and approves crops before PDF generation. Key UI: 1. PageView with each raw image. 2. Auto-suggest a bounding box (use edge detection in OpenCV: Canny + Hough lines). 3. Render draggable corner handles over the image (use GestureDetector + CustomPainter). 4. Approve/Reject swipe gestures. 5. Confirmed crops feed into the enhancement pipeline. This is the most complex UI component in the app.',
+      links:'Flutter CustomPainter | https://api.flutter.dev/flutter/rendering/CustomPainter-class.html\nFlutter GestureDetector | https://api.flutter.dev/flutter/widgets/GestureDetector-class.html\nFlutter PageView | https://api.flutter.dev/flutter/widgets/PageView-class.html\nOpenCV Canny Edge Detection | https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html',
+    },
+    {
+      id:'sls-t08', project_id:SLS_PROJECT_ID, order_index:8,
+      title:'Image Enhancement: Deskewing & Binarization',
+      description:'Apply perspective correction (deskewing) and contrast boosting (binarization) to clean slides of projector glare and keystoning.',
+      priority:'high', tag:'Phase B — Deferred Processing', completed:false,
+      notes:'Two key transforms: 1. Deskewing (Perspective Warp): Use the 4 corner points from the review UI to compute a perspective transform matrix. Apply warpPerspective() via opencv_dart to produce a flat, rectangular slide image. 2. Binarization: Apply adaptive thresholding (adaptiveThreshold with ADAPTIVE_THRESH_GAUSSIAN_C) to produce a high-contrast black-and-white image that removes projector glare. Use Google ML Kit\'s image processing as an alternative for binarization.',
+      links:'opencv_dart | https://pub.dev/packages/opencv_dart\nOpenCV warpPerspective docs | https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html\nAdaptive Thresholding (OpenCV) | https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html\nGoogle ML Kit Flutter | https://pub.dev/packages/google_mlkit_document_scanner',
+    },
+    {
+      id:'sls-t09', project_id:SLS_PROJECT_ID, order_index:9,
+      title:'On-Device OCR with ML Kit Text Recognition',
+      description:'Extract text from cleaned slide images entirely on-device using Google ML Kit, with confidence-based quality warnings.',
+      priority:'high', tag:'Phase B — Deferred Processing', completed:false,
+      notes:'Use google_mlkit_text_recognition package. Workflow: 1. Pass the enhanced image file to TextRecognizer. 2. Iterate over RecognizedText blocks. 3. Concatenate all text lines into a plaintext dump. 4. Check per-block confidence score. If any block confidence < 0.6 (blurry or too far), flag the page with a ⚠️ warning stored in the lecture metadata. This text dump is also stored in SQLite for global in-app search.',
+      links:'google_mlkit_text_recognition (pub.dev) | https://pub.dev/packages/google_mlkit_text_recognition\nML Kit Text Recognition Docs | https://developers.google.com/ml-kit/vision/text-recognition/android\nML Kit Flutter Plugins GitHub | https://github.com/flutter-ml/google_ml_kit_flutter',
+    },
+    {
+      id:'sls-t10', project_id:SLS_PROJECT_ID, order_index:10,
+      title:'Dual-Layer Searchable PDF Generation',
+      description:'Use the Dart pdf package to programmatically build PDFs with the cleaned slide image as the visible layer and the OCR text as an invisible, selectable text layer.',
+      priority:'high', tag:'Phase B — Deferred Processing', completed:false,
+      notes:'This is the core deliverable. Using the pdf and printing packages: 1. Create a Document(). 2. For each slide: add a page, draw the cleaned image at full page size. 3. For each OCR text block: draw the corresponding text at an identical position but with color: PdfColors.transparent. 4. Save with doc.save(). The result is a PDF that looks like a slide scan but allows Ctrl+F / search. Store the final file at the path defined in the Lectures SQLite table.',
+      links:'pdf package (pub.dev) | https://pub.dev/packages/pdf\npdf package GitHub | https://github.com/DavBfr/dart_pdf\nprinting package (pub.dev) | https://pub.dev/packages/printing\nPDF Reference (ISO 32000) | https://www.iso.org/standard/75839.html',
+    },
+    {
+      id:'sls-t11', project_id:SLS_PROJECT_ID, order_index:11,
+      title:'Local Database with SQLite (sqflite)',
+      description:'Implement the Courses and Lectures SQLite schema to organize PDFs, store OCR text for in-app search, and manage the course schedule.',
+      priority:'high', tag:'Phase B — Deferred Processing', completed:false,
+      notes:'Schema:\n\nCOURSES table: id (PK), course_code (TEXT, e.g. "CS301"), course_name (TEXT, e.g. "Robotics"), color (TEXT).\n\nLECTURES table: id (PK), course_id (FK → Courses), title (TEXT, e.g. "Lecture 04 - Kinematics"), date_created (INTEGER timestamp), file_path (TEXT), extracted_text_summary (TEXT — full OCR dump for search), has_warnings (INTEGER 0/1).\n\nKey queries: SELECT * FROM lectures WHERE extracted_text_summary LIKE \'%kinematics%\' for global search. Use sqflite migrations for schema upgrades.',
+      links:'sqflite (pub.dev) | https://pub.dev/packages/sqflite\nsqflite GitHub | https://github.com/tekartik/sqflite\nSQLite official docs | https://www.sqlite.org/docs.html\nFlutter SQLite tutorial | https://docs.flutter.dev/cookbook/persistence/sqlite',
+    },
+    {
+      id:'sls-t12', project_id:SLS_PROJECT_ID, order_index:12,
+      title:'Cloud Backup via Google Drive / Dropbox API',
+      description:'Silently sync compiled PDFs to the cloud over Wi-Fi after lecture processing completes, without requiring any user action.',
+      priority:'medium', tag:'Phase C — Sync & Polish', completed:false,
+      notes:'Strategy: Background upload only over Wi-Fi (use connectivity_plus to check). For Google Drive: use googleapis package + google_sign_in for OAuth. Create a folder structure matching Courses → Lectures on Drive. For Dropbox: use their official Dart SDK or REST API with oauth2. Upload the PDF at file_path from the Lectures table. On success, store the remote URL in a new cloud_url column. Respect battery saver — use WorkManager or Dart background_fetch for deferred uploads.',
+      links:'googleapis (pub.dev) | https://pub.dev/packages/googleapis\ngoogle_sign_in (pub.dev) | https://pub.dev/packages/google_sign_in\nDropbox API Docs | https://www.dropbox.com/developers/documentation\nconnectivity_plus (pub.dev) | https://pub.dev/packages/connectivity_plus\nflutter_background_fetch | https://pub.dev/packages/flutter_background_fetch',
+    },
+  ],
+
+  subtopics: [
+    // T01 — Flutter & Dart Fundamentals
+    {id:'sls-s01',topic_id:'sls-t01',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Dart null safety and type system',
+     description:'Understand Dart\'s sound null safety model — the foundation of modern Flutter apps.',
+     notes:'Every variable is non-nullable by default. Use ? for nullable: String? name. Use ! to assert non-null (risky). Late keyword: late String computed = expensiveOp(). This catches null errors at compile time, not runtime.',
+     links:'Dart null safety docs | https://dart.dev/null-safety'},
+    {id:'sls-s02',topic_id:'sls-t01',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'async/await and Futures in Dart',
+     description:'Handle asynchronous operations: file I/O, camera, OCR, and HTTP all return Futures.',
+     notes:'Future<T> = a value that will be available later. await pauses until it resolves. async marks a function as returning a Future. Dart is single-threaded — async does NOT create threads; it interleaves on the event loop. For CPU-heavy work, use Isolates.',
+     links:'Dart async-await | https://dart.dev/language/async\nDart Futures | https://dart.dev/libraries/dart-async'},
+    {id:'sls-s03',topic_id:'sls-t01',project_id:SLS_PROJECT_ID,order_index:3,completed:false,
+     title:'Flutter widget tree: StatefulWidget vs StatelessWidget',
+     description:'Know when to use each and how State lifecycle works.',
+     notes:'StatelessWidget: no mutable state — just build() once. StatefulWidget: has a State object with setState() that triggers rebuild. For the scanner, the camera preview = StatefulWidget. Key lifecycle: initState() → build() → setState() → build() → dispose().',
+     links:'Flutter widgets intro | https://docs.flutter.dev/ui/widgets-intro\nStatefulWidget API | https://api.flutter.dev/flutter/widgets/StatefulWidget-class.html'},
+    {id:'sls-s04',topic_id:'sls-t01',project_id:SLS_PROJECT_ID,order_index:4,completed:false,
+     title:'Dart Isolates for background processing',
+     description:'Run CPU-intensive OpenCV operations in an Isolate to keep the UI at 60fps.',
+     notes:'The main Flutter thread is the UI isolate. OpenCV SSIM computation is slow. Use compute() helper for simple cases: compute(processFrame, imageBytes). For persistent background work, use Isolate.spawn() or the flutter_isolate package.',
+     links:'Dart Isolates | https://dart.dev/language/isolates\nFlutter compute() | https://api.flutter.dev/flutter/foundation/compute.html'},
+
+    // T02 — Dev Setup
+    {id:'sls-s05',topic_id:'sls-t02',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Install Flutter SDK and run flutter doctor',
+     description:'Get the Flutter toolchain working — android toolchain, IDE setup, connected device.',
+     notes:'Download from flutter.dev/docs/get-started/install. Extract to C:\\flutter (Windows) or ~/flutter (Mac). Add to PATH. Run: flutter doctor --verbose. Fix every ✗ before proceeding. Common issues: Android license (run flutter doctor --android-licenses), Java version.',
+     links:'Flutter Install | https://docs.flutter.dev/get-started/install'},
+    {id:'sls-s06',topic_id:'sls-t02',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Configure camera permissions for Android & iOS',
+     description:'Add manifest/plist entries so the OS grants camera access.',
+     notes:'Android: In android/app/src/main/AndroidManifest.xml add: <uses-permission android:name="android.permission.CAMERA"/>. iOS: In ios/Runner/Info.plist add NSCameraUsageDescription key with a description string. Then use permission_handler package to request at runtime.',
+     links:'camera plugin setup | https://pub.dev/packages/camera#setup\npermission_handler | https://pub.dev/packages/permission_handler'},
+    {id:'sls-s07',topic_id:'sls-t02',project_id:SLS_PROJECT_ID,order_index:3,completed:false,
+     title:'Create the project structure and add core dependencies',
+     description:'Set up pubspec.yaml with all required packages for the scanner MVP.',
+     notes:'Core packages to add: camera, opencv_dart, google_mlkit_text_recognition, pdf, sqflite, path_provider, permission_handler, connectivity_plus, shared_preferences. Run flutter pub get after editing pubspec.yaml.',
+     links:'pub.dev | https://pub.dev/\npubspec.yaml guide | https://dart.dev/tools/pub/pubspec'},
+
+    // T03 — Camera Integration
+    {id:'sls-s08',topic_id:'sls-t03',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Initialize CameraController and render live preview',
+     description:'Open the camera and display it full-screen using CameraPreview widget.',
+     notes:'1. Get available cameras: cameras = await availableCameras(). 2. Init controller: CameraController(cameras[0], ResolutionPreset.high). 3. await controller.initialize(). 4. Render: Scaffold(body: CameraPreview(controller)). Always dispose() the controller in widget dispose() to free resources.',
+     links:'camera package | https://pub.dev/packages/camera\nFlutter Camera Recipe | https://docs.flutter.dev/cookbook/plugins/picture-using-camera'},
+    {id:'sls-s09',topic_id:'sls-t03',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Lock focus and exposure for projector environments',
+     description:'Prevent the camera from hunting focus/exposure when pointed at a bright projector in a dark room.',
+     notes:'After tapping the screen to choose a focus point: controller.setFocusPoint(offset); controller.setExposurePoint(offset); controller.setFocusMode(FocusMode.locked); controller.setExposureMode(ExposureMode.locked). This eliminates flickering captures caused by the camera trying to compensate for the projector light.',
+     links:'CameraController API | https://pub.dev/documentation/camera/latest/camera/CameraController-class.html'},
+    {id:'sls-s10',topic_id:'sls-t03',project_id:SLS_PROJECT_ID,order_index:3,completed:false,
+     title:'Tap-to-focus UI gesture',
+     description:'Allow the user to tap on the camera preview to set the focus/exposure lock point.',
+     notes:'Wrap CameraPreview in GestureDetector: onTapDown: (details) => handleTap(details). Convert tap position (pixels) to a normalized (0.0–1.0) offset: Offset(tap.x / width, tap.y / height). Pass to setFocusPoint() and setExposurePoint().',
+     links:'GestureDetector | https://api.flutter.dev/flutter/widgets/GestureDetector-class.html'},
+
+    // T04 — SSIM Slide Detection
+    {id:'sls-s11',topic_id:'sls-t04',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Set up the frame-capture timer loop',
+     description:'Use a periodic Dart Timer to grab frames from the camera at a regular interval (e.g., every 500ms).',
+     notes:'Timer.periodic(Duration(milliseconds: 500), (_) => captureFrameForAnalysis()). In captureFrameForAnalysis: use controller.takePicture() to get an XFile. Convert to bytes for OpenCV processing. Keep a lastFrameBytes variable for comparison. Do NOT block the timer callback — run OpenCV in compute().',
+     links:'Dart Timer class | https://api.dart.dev/stable/dart-async/Timer-class.html\ncamera package takePicture | https://pub.dev/documentation/camera/latest/camera/CameraController/takePicture.html'},
+    {id:'sls-s12',topic_id:'sls-t04',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Compute SSIM between current and previous frame',
+     description:'Use opencv_dart to convert frames to grayscale and compute the Structural Similarity Index.',
+     notes:'SSIM implementation steps: 1. Decode image bytes to cv.Mat. 2. Convert to grayscale: cv.cvtColor(mat, cv.COLOR_BGR2GRAY). 3. Compute SSIM using cv.quality.QualitySSIM.compute(img1, img2). Returns a Scalar; use the L channel value. An SSIM of 1.0 = identical frames. A drop below 0.85 typically indicates a slide change.',
+     links:'opencv_dart | https://pub.dev/packages/opencv_dart\nSSIM Wikipedia | https://en.wikipedia.org/wiki/Structural_similarity_index_measure'},
+    {id:'sls-s13',topic_id:'sls-t04',project_id:SLS_PROJECT_ID,order_index:3,completed:false,
+     title:'Tune the SSIM threshold and trigger captures',
+     description:'Find the right sensitivity balance to catch real slide changes while ignoring noise.',
+     notes:'Start with threshold = 0.85. Test scenarios: hand gestures in front of the projector (should NOT trigger), actual slide change (MUST trigger), slight camera shake (should NOT trigger). Add a cooldown period (e.g., 2 seconds) between accepted triggers to prevent burst captures during an animated slide transition.',
+     links:'SSIM background subtraction OpenCV | https://docs.opencv.org/4.x/d1/dc5/tutorial_background_subtraction.html'},
+
+    // T05 — Deduplication
+    {id:'sls-s14',topic_id:'sls-t05',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Understand perceptual hashing (pHash)',
+     description:'Learn the DCT-based algorithm that produces a compact image fingerprint tolerant to minor image differences.',
+     notes:'pHash steps: 1. Resize image to 32×32. 2. Convert to grayscale. 3. Apply DCT (discrete cosine transform). 4. Take the top-left 8×8 of the DCT result. 5. Compute the mean. 6. Produce a 64-bit hash: each bit = whether that DCT coefficient is above the mean. Two hashes with Hamming distance < 10 are considered duplicates.',
+     links:'pHash algorithm | http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html\nHamming distance | https://en.wikipedia.org/wiki/Hamming_distance'},
+    {id:'sls-s15',topic_id:'sls-t05',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Implement pHash in Dart with OpenCV',
+     description:'Write a Dart function that computes a 64-bit perceptual hash for a given image.',
+     notes:'Use opencv_dart: 1. cv.resize(mat, Size(32,32)). 2. cv.cvtColor(..., cv.COLOR_BGR2GRAY). 3. Convert to float32. 4. cv.dct(floatMat). 5. Take 8x8 top-left. 6. Compute mean. 7. For each element: bit = (element > mean) ? 1 : 0. 8. Pack 64 bits into an int64. Hamming distance = popcount(hash1 XOR hash2).',
+     links:'opencv_dart DCT | https://pub.dev/packages/opencv_dart\nDart bit operations | https://dart.dev/language/operators'},
+
+    // T06 — Buffer Management
+    {id:'sls-s16',topic_id:'sls-t06',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Use path_provider to get the temp directory',
+     description:'Find the device\'s temporary storage location to save raw frames during class.',
+     notes:'import "package:path_provider/path_provider.dart"; final dir = await getTemporaryDirectory(); final path = "${dir.path}/lecture_${sessionId}_frame_${index}.jpg"; await File(path).writeAsBytes(imageBytes);. The OS can clear temp files when storage is low — consider copying to app documents dir for long sessions.',
+     links:'path_provider | https://pub.dev/packages/path_provider\nDart File I/O | https://api.dart.dev/stable/dart-io/File-class.html'},
+    {id:'sls-s17',topic_id:'sls-t06',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Session management — start, pause, stop capture',
+     description:'Implement a session state machine so the user can pause or end the lecture without losing captures.',
+     notes:'States: IDLE → RECORDING → PAUSED → STOPPED. On STOP: write the buffer manifest (list of file paths + timestamps) to SharedPreferences with a session UUID. This manifest is what the deferred processing pipeline reads. Show a summary snackbar: "Session ended. 23 slides captured."',
+     links:'shared_preferences | https://pub.dev/packages/shared_preferences'},
+
+    // T07 — Review Queue UI
+    {id:'sls-s18',topic_id:'sls-t07',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Build the slide review PageView',
+     description:'Create a swipeable screen that shows each raw captured frame for user review.',
+     notes:'Use PageView.builder with the list of frame file paths as items. Each page shows: the raw image, an "Approve" button, a "Delete" button, and the auto-detected crop overlay. Track approval state in a List<SlideReviewState> where each item has: accepted: bool, cropCorners: List<Offset>.',
+     links:'PageView API | https://api.flutter.dev/flutter/widgets/PageView-class.html'},
+    {id:'sls-s19',topic_id:'sls-t07',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Implement draggable 4-point crop handles',
+     description:'Let users adjust the auto-detected slide boundary corners with drag gestures.',
+     notes:'Use a Stack: put the image at the bottom layer and a CustomPainter on top that draws lines between 4 corner points. Wrap each corner in a GestureDetector with onPanUpdate to move its Offset. Redraw with setState(). The 4 Offsets are then passed to the perspective warp function in OpenCV.',
+     links:'CustomPainter tutorial | https://medium.com/flutter-community/flutter-custom-painter-28e6cf1b19a9\nGestureDetector | https://api.flutter.dev/flutter/widgets/GestureDetector-class.html'},
+
+    // T08 — Image Enhancement
+    {id:'sls-s20',topic_id:'sls-t08',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Apply perspective warp (deskewing) with OpenCV',
+     description:'Use the 4 approved corner points to compute a transformation matrix and warp the image to a flat rectangle.',
+     notes:'OpenCV steps: 1. Create Mat of 4 source points (user-approved corners). 2. Create Mat of 4 destination points (output rectangle corners, e.g., 1080×720). 3. M = cv.getPerspectiveTransform(srcPoints, dstPoints). 4. cv.warpPerspective(inputMat, M, Size(1080, 720)) → warped output. This removes keystoning from projector angles.',
+     links:'OpenCV warpPerspective | https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html\nopencv_dart | https://pub.dev/packages/opencv_dart'},
+    {id:'sls-s21',topic_id:'sls-t08',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Remove projector glare with adaptive binarization',
+     description:'Boost contrast and remove uneven projector illumination using adaptive thresholding.',
+     notes:'Steps: 1. Convert to grayscale. 2. Apply GaussianBlur to reduce noise. 3. cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2). This produces a clean black-and-white slide that is ideal for OCR. Alternatively, use CLAHE for localized contrast enhancement while preserving color.',
+     links:'Adaptive Thresholding OpenCV | https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html\nCLAHE OpenCV | https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html'},
+
+    // T09 — OCR
+    {id:'sls-s22',topic_id:'sls-t09',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Set up google_mlkit_text_recognition',
+     description:'Add ML Kit to the project and run the TextRecognizer on a cleaned image.',
+     notes:'Add to pubspec.yaml: google_mlkit_text_recognition. Android: requires minSdkVersion 21. iOS: requires iOS 13+. Usage: final recognizer = TextRecognizer(); final result = await recognizer.processImage(InputImage.fromFile(imageFile)); result.blocks.forEach((block) => print(block.text));',
+     links:'google_mlkit_text_recognition | https://pub.dev/packages/google_mlkit_text_recognition\nML Kit for Flutter GitHub | https://github.com/flutter-ml/google_ml_kit_flutter'},
+    {id:'sls-s23',topic_id:'sls-t09',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Extract text and detect low-confidence pages',
+     description:'Parse ML Kit results, build the text dump, and flag pages with poor OCR confidence.',
+     notes:'For each TextBlock in result.blocks: concat block.text to summary string. Check block.recognizedLanguages and confidence (if available). For each TextElement in block.lines[].elements[]: confidence < 0.6 = flag the page. Store: summary text for SQLite search, warning flag for UI display, per-block positions for PDF invisible text layer placement.',
+     links:'TextRecognizer API | https://pub.dev/documentation/google_mlkit_text_recognition/latest/'},
+
+    // T10 — PDF Generation
+    {id:'sls-s24',topic_id:'sls-t10',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Create a PDF document with the pdf package',
+     description:'Build the basic PDF structure: document, pages, and image embedding.',
+     notes:'import "package:pdf/pdf.dart"; import "package:pdf/widgets.dart" as pw; final doc = pw.Document(); final imageBytes = await file.readAsBytes(); final image = pw.MemoryImage(imageBytes); doc.addPage(pw.Page(build: (ctx) => pw.Image(image, fit: pw.BoxFit.contain))); final bytes = await doc.save(); await File(outputPath).writeAsBytes(bytes);',
+     links:'pdf package | https://pub.dev/packages/pdf\npdf package examples | https://github.com/DavBfr/dart_pdf/tree/master/pdf/example'},
+    {id:'sls-s25',topic_id:'sls-t10',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Embed invisible OCR text layer for searchability',
+     description:'Place transparent text on top of the slide image at the correct positions so the PDF is Ctrl+F searchable.',
+     notes:'For each OCR text block (from ML Kit): compute its position relative to the image dimensions, scale to PDF page coordinates. Draw a pw.Text widget at that position with style: pw.TextStyle(color: PdfColors.transparent). Stack the image and the text widgets using pw.Stack. The PDF viewer renders only the image but the text is there for search/copy.',
+     links:'pdf package pw.Stack | https://pub.dev/documentation/pdf/latest/widgets/Stack-class.html\npdf transparent text | https://pub.dev/packages/pdf'},
+
+    // T11 — SQLite Database
+    {id:'sls-s26',topic_id:'sls-t11',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Initialize the sqflite database and create tables',
+     description:'Set up the database file and run CREATE TABLE statements for Courses and Lectures.',
+     notes:'import "package:sqflite/sqflite.dart"; final db = await openDatabase("lecture_scanner.db", version: 1, onCreate: (db, version) async { await db.execute("CREATE TABLE Courses (id INTEGER PRIMARY KEY AUTOINCREMENT, course_code TEXT, course_name TEXT, color TEXT)"); await db.execute("CREATE TABLE Lectures (id INTEGER PRIMARY KEY AUTOINCREMENT, course_id INTEGER, title TEXT, date_created INTEGER, file_path TEXT, extracted_text_summary TEXT, has_warnings INTEGER, FOREIGN KEY(course_id) REFERENCES Courses(id))"); });',
+     links:'sqflite docs | https://pub.dev/packages/sqflite\nSQLite tutorial | https://www.sqlitetutorial.net/'},
+    {id:'sls-s27',topic_id:'sls-t11',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Implement CRUD operations for courses and lectures',
+     description:'Write insert, query, and delete functions for the database layer.',
+     notes:'Insert lecture: db.insert("Lectures", {"course_id": id, "title": title, "date_created": DateTime.now().ms, "file_path": path, "extracted_text_summary": text, "has_warnings": warnings ? 1 : 0}). Search: db.rawQuery("SELECT l.*, c.course_name FROM Lectures l JOIN Courses c ON l.course_id = c.id WHERE l.extracted_text_summary LIKE ?", ["%$query%"]);',
+     links:'sqflite CRUD examples | https://pub.dev/packages/sqflite#usage'},
+
+    // T12 — Cloud Backup
+    {id:'sls-s28',topic_id:'sls-t12',project_id:SLS_PROJECT_ID,order_index:1,completed:false,
+     title:'Google Sign-In and Drive API authentication',
+     description:'Implement OAuth2 sign-in using google_sign_in and authorize the Drive API scope.',
+     notes:'Add packages: google_sign_in, googleapis, googleapis_auth. Scopes: DriveApi.driveFileScope (only files created by the app). SignIn: final account = await GoogleSignIn(scopes: [DriveApi.driveFileScope]).signIn(); final auth = await account.authentication; Use auth.accessToken to create an HTTP client for the Drive API.',
+     links:'google_sign_in | https://pub.dev/packages/google_sign_in\ngoogleapis | https://pub.dev/packages/googleapis\nGoogle Drive API docs | https://developers.google.com/drive/api/guides/about-sdk'},
+    {id:'sls-s29',topic_id:'sls-t12',project_id:SLS_PROJECT_ID,order_index:2,completed:false,
+     title:'Upload PDF to Google Drive — Wi-Fi only',
+     description:'Upload the compiled PDF silently and only when on Wi-Fi to preserve mobile data.',
+     notes:'Check connectivity: final result = await Connectivity().checkConnectivity(); if (result == ConnectivityResult.wifi) { ... upload ... }. Upload: DriveApi(authenticatedClient).files.create(File()..name=lectureTitle..parents=[folderId], uploadMedia: Media(fileStream, fileSize)). Create a course folder on Drive if it doesn\'t exist (query by name first). Store the resulting fileId in the SQLite Lectures table.',
+     links:'connectivity_plus | https://pub.dev/packages/connectivity_plus\nDrive API upload | https://developers.google.com/drive/api/guides/manage-uploads'},
+  ],
+};
+
+// ============================================================
 // LOCAL STORAGE DATA LAYER
 // ============================================================
 function lsGet(key) {
@@ -1096,9 +1383,9 @@ function loadAll() {
 
   // First run — seed projects
   if (!projects) {
-    projects  = [BT_SEED.project, VPN_SEED.project, DOC_SEED.project];
-    topics    = [...BT_SEED.topics, ...VPN_SEED.topics, ...DOC_SEED.topics];
-    subtopics = [...BT_SEED.subtopics, ...VPN_SEED.subtopics, ...DOC_SEED.subtopics];
+    projects  = [BT_SEED.project, VPN_SEED.project, DOC_SEED.project, SLS_SEED.project];
+    topics    = [...BT_SEED.topics, ...VPN_SEED.topics, ...DOC_SEED.topics, ...SLS_SEED.topics];
+    subtopics = [...BT_SEED.subtopics, ...VPN_SEED.subtopics, ...DOC_SEED.subtopics, ...SLS_SEED.subtopics];
     lsSet(KEYS.projects, projects);
     lsSet(KEYS.topics, topics);
     lsSet(KEYS.subtopics, subtopics);
@@ -1137,6 +1424,14 @@ function loadAll() {
       projects = [...projects, DOC_SEED.project];
       topics   = [...(topics || []), ...DOC_SEED.topics];
       subtopics = [...(subtopics || []), ...DOC_SEED.subtopics];
+      changed = true;
+    }
+
+    // Inject Smart Lecture Scanner project if not already present
+    if (!projects.find(p => p.id === SLS_PROJECT_ID)) {
+      projects = [...projects, SLS_SEED.project];
+      topics   = [...(topics || []), ...SLS_SEED.topics];
+      subtopics = [...(subtopics || []), ...SLS_SEED.subtopics];
       changed = true;
     }
 
@@ -1375,11 +1670,16 @@ function renderSidebarProjects() {
     el.innerHTML = '<div class="nav-loading">No projects yet.</div>';
     return;
   }
-  el.innerHTML = State.projects.map(p => `
+  el.innerHTML = State.projects.map(p => {
+    const topicCount = State.topics.filter(t => t.project_id === p.id).length;
+    const doneCount  = State.topics.filter(t => t.project_id === p.id && t.completed).length;
+    return `
     <div class="project-nav-item" data-project-id="${p.id}" onclick="switchView('project-detail','${p.id}')">
-      <div class="project-nav-dot" style="background:${p.color || '#6366f1'}"></div>
+      <div class="project-nav-dot" style="background:${p.color || '#6366f1'};color:${p.color || '#6366f1'}"></div>
       <span>${esc(p.name)}</span>
-    </div>`).join('');
+      <span class="project-nav-count">${doneCount}/${topicCount}</span>
+    </div>`;
+  }).join('');
   State.projects.forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.id; opt.textContent = p.name;
